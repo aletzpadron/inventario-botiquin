@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- PROYECTO FINAL - PLANTILLA LIMPIA -->
+<title>Inventario de Botiquín</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#dfe5ee;--accent:#1769aa;--green:#1f9d55;--yellow:#1f9d55;--red:#d64545}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:1400px;margin:auto;padding:22px}.head{display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}
+h1{margin:0;font-size:28px}.sub{color:var(--muted);margin-top:5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:18px}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.field label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}.field input,.search{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;font-size:15px}
+.stats{display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:center}.circle-wrap{display:flex;justify-content:center}.circle{width:170px;height:170px;border-radius:50%;background:conic-gradient(var(--green) 0deg,#e8edf3 0deg);display:grid;place-items:center;position:relative}.circle:before{content:"";position:absolute;width:132px;height:132px;background:#fff;border-radius:50%}.circle>div{position:relative;z-index:1}.pct{font-size:38px;font-weight:800;text-align:center}.circle-label{text-align:center;font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em}.alerts{margin-top:14px}.alert{padding:10px 12px;border-radius:9px;margin-top:8px;font-size:13px;font-weight:700}.alert.warn{background:#fff0bf;color:#855d00}.alert.danger{background:#ffe0e0;color:#a32626}.alert.info{background:#e7edf5;color:#536273}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:13px}.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px}.g{background:var(--green)}.y{background:var(--yellow)}.r{background:var(--red)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.btn{border:0;border-radius:9px;padding:11px 15px;background:var(--accent);color:white;font-weight:700;cursor:pointer}.btn.secondary{background:#667085}.table-wrap{overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:1050px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{background:#eef3f8;position:sticky;top:0;z-index:1}
+.qty,.expiry{width:100px;padding:8px;border:1px solid var(--line);border-radius:7px}.status{font-weight:700;border-radius:8px;padding:6px 9px;display:inline-block}.ok{background:#dff4e7;color:#146b39}.min{background:#fff0bf;color:#855d00}.bad{background:#ffe0e0;color:#a32626}.pending{background:#e7edf5;color:#536273}
+@media(max-width:750px){.meta{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.wrap{padding:12px}h1{font-size:23px}.circle{width:145px;height:145px}.circle:before{width:112px;height:112px}}
+</style>
+
+<!-- PUBLICACIÓN: este archivo funciona en GitHub Pages.
+     Para datos compartidos entre usuarios, configura Supabase y sustituye
+     SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en la sección de configuración. -->
+<script>
+window.INVENTARIO_CONFIG = {
+  SUPABASE_URL: "",
+  SUPABASE_PUBLISHABLE_KEY: "",
+  SHARED_MODE: false
+};
+</script>
+
+<script>
+/* PLANTILLA LIMPIA: no contiene existencias, responsables ni fechas de prueba. */
+try {
+  if (!localStorage.getItem("inventarioBotiquinCleanInitializedV1")) {
+    localStorage.removeItem("inventarioBotiquinV1");
+    localStorage.removeItem("inventarioBotiquinDemoV1");
+    localStorage.setItem("inventarioBotiquinCleanInitializedV1", "1");
+  }
+} catch (e) {}
+</script>
+</head>
+<body>
+<div id="sharedModeNotice" style="display:none;margin:10px auto;max-width:1200px;padding:10px 14px;border-radius:12px;background:#fff7e6;border:1px solid #f0c36d;color:#7a5300;font:600 13px system-ui">
+  Modo local: los cambios se guardan en este dispositivo. Para compartir el mismo inventario entre usuarios, configura Supabase.
+</div>
+
+<div class="wrap">
+<div class="head"><div><h1>Inventario de Botiquín</h1><div class="sub">Control de existencias y caducidades</div></div><button class="btn" id="print">Imprimir / PDF</button></div>
+<div class="card meta">
+<div class="field"><label>Número de botiquín</label><input id="botiquin"></div>
+<div class="field"><label>Fecha</label><input id="fecha" type="date"></div>
+<div class="field"><label>Responsable</label><input id="responsable"></div>
+</div>
+<div class="card">
+<div class="stats">
+  <div class="circle-wrap">
+    <div class="circle" id="circle"><div><div class="pct" id="pct">0%</div><div class="circle-label">COMPLETO</div></div></div>
+  </div>
+  <div>
+    <div class="legend">
+      <span><i class="dot g"></i>Verde: mínimo o superior</span>
+      <span><i class="dot y"></i>Amarillo: faltan 1–2 piezas para el mínimo</span>
+      <span><i class="dot r"></i>Rojo: por debajo del mínimo</span>
+    </div>
+    <div id="expiryAlerts" class="alerts" aria-live="polite"></div>
+  </div>
+</div>
+</div>
+<div class="card">
+<div class="tools"><input class="search" id="search" placeholder="Buscar insumo, medicamento o categoría..." style="flex:1;min-width:220px"><button class="btn secondary" id="clear">Limpiar existencias</button></div>
+<div class="table-wrap"><table><thead><tr><th>No.</th><th>Categoría</th><th>Insumo / medicamento</th><th>Unidad</th><th>Mínimo</th><th>Existencia actual</th><th>Estado</th><th>Caducidad</th></tr></thead><tbody id="tbody"></tbody></table></div>
+</div>
+</div>
+<script>
+const items=[{"id": 1, "category": "Equipo médico", "name": "Reanimador tipo bolsa-válvula con vías de entrada de oxígeno, dispositivo de concentración y válvulas de liberación con bolsa de 1000 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 2, "category": "Equipo médico", "name": "Mascarilla adulto tamaño 4 o 5", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 3, "category": "Equipo médico", "name": "Estetoscopio adulto con baumanómetro", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 4, "category": "Equipo médico", "name": "Oxímetro de pulso", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 5, "category": "Equipo médico", "name": "Termómetro", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 6, "category": "Equipo médico", "name": "Glucómetro", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 7, "category": "Glucometría", "name": "Tiras reactivas para glucómetro", "unit": "piezas", "min": 15, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 8, "category": "Glucometría", "name": "Lancetas", "unit": "piezas", "min": 15, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 9, "category": "Glucometría", "name": "Pila de repuesto para glucómetro", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 10, "category": "RPBI", "name": "Depósito rígido de RPBI", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 11, "category": "Soluciones", "name": "Sol. NaCl 0.9% 500 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 12, "category": "Soluciones", "name": "Sol. NaCl 0.9% 250 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 13, "category": "Soluciones", "name": "Sol. Dextrosa 5% o 10% 250 o 500 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 14, "category": "Soluciones", "name": "Sol. Dextrosa 50% 50 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 15, "category": "Curación", "name": "Torundas con jabón quirúrgico", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 16, "category": "Curación", "name": "Torundas con alcohol", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 17, "category": "Curación", "name": "Gasas no estériles", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 18, "category": "Curación", "name": "Apósitos estériles", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 19, "category": "Higiene", "name": "Desinfectante para manos", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 20, "category": "Protección", "name": "Cubrebocas", "unit": "piezas", "min": 10, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 21, "category": "Protección", "name": "Abatelenguas", "unit": "piezas", "min": 10, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 22, "category": "Protección", "name": "Guantes no estériles", "unit": "piezas", "min": 10, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 23, "category": "Curación", "name": "Apósitos transparentes", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 24, "category": "Instrumental", "name": "Tijeras de uso rudo", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 25, "category": "Protección", "name": "Sábana térmica", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 26, "category": "Medicamentos", "name": "Salbutamol 100 mcg, 200 dosis, aerosol", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 27, "category": "Vía aérea", "name": "Cánulas orofaríngeas Berman o Guedel 0, 1, 2, 3, 4, 5, 6", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 28, "category": "Lavado ocular", "name": "Lavaojos", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 29, "category": "Curación", "name": "Ligadura", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 30, "category": "Curación", "name": "Venda elástica de 30 cm", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 31, "category": "Curación", "name": "Venda elástica de 15 o 20 cm", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 32, "category": "Curación", "name": "Venda elástica de 5 cm", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 33, "category": "Curación", "name": "Venda elástica de 10 cm", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 34, "category": "Curación", "name": "Esparadrapo (transport y/o tela adhesiva)", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 35, "category": "Curación", "name": "Porta cintas", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 36, "category": "Venoclisis", "name": "Equipo desechable para venoclisis normogotero", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 37, "category": "Jeringas", "name": "Jeringas de insulina", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 38, "category": "Jeringas", "name": "Jeringas 3 ml", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 39, "category": "Jeringas", "name": "Jeringas 5 ml", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 40, "category": "Jeringas", "name": "Jeringas 10 ml", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 41, "category": "Jeringas", "name": "Jeringas 20 ml", "unit": "piezas", "min": 2, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 42, "category": "Jeringas", "name": "Agujas tamaños varios", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 43, "category": "Catéteres", "name": "Catéter periférico corto #14", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 44, "category": "Catéteres", "name": "Catéter periférico corto #16", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 45, "category": "Catéteres", "name": "Catéter periférico corto #20", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 46, "category": "Catéteres", "name": "Catéter periférico corto #22", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 47, "category": "Catéteres", "name": "Catéter periférico corto #24", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 48, "category": "Medicamentos", "name": "Ibuprofeno 600 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 49, "category": "Medicamentos", "name": "Paracetamol 500 mg", "unit": "tabletas", "min": 10, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 50, "category": "Medicamentos", "name": "Ketorolaco 10 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 51, "category": "Medicamentos", "name": "Ácido acetilsalicílico 500 mg", "unit": "tabletas", "min": 10, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 52, "category": "Medicamentos", "name": "Losartán 50 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 53, "category": "Medicamentos", "name": "Captopril 25 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 54, "category": "Medicamentos", "name": "Loratadina 10 mg", "unit": "tabletas", "min": 10, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 55, "category": "Medicamentos", "name": "Cloropiramina 25 mg", "unit": "tabletas", "min": 4, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 56, "category": "Medicamentos", "name": "Butilhioscina con metamizol sódico 10 mg/250 mg", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 57, "category": "Medicamentos", "name": "Omeprazol 20 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 58, "category": "Medicamentos", "name": "Neomicina / caolín / pectina 129 mg/280 mg/30 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 59, "category": "Medicamentos", "name": "Loperamida 2 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 60, "category": "Medicamentos", "name": "Salbutamol 100 mg", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 61, "category": "Medicamentos", "name": "Naproxeno 500 mg", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 62, "category": "Medicamentos", "name": "Dimenhidrinato 50 mg", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 63, "category": "Medicamentos", "name": "Ketorolaco 30 mg/1 ml", "unit": "ámpulas", "min": 3, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 64, "category": "Medicamentos", "name": "Tramadol 100 mg/2 ml", "unit": "ámpulas", "min": 3, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 65, "category": "Medicamentos", "name": "Metamizol sódico 1 g/2 ml", "unit": "ámpulas", "min": 2, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 66, "category": "Medicamentos", "name": "Hioscina IV 20 mg", "unit": "ámpulas", "min": 3, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 67, "category": "Medicamentos", "name": "Dexametasona 8 mg/2 ml", "unit": "ámpulas", "min": 2, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 68, "category": "Medicamentos", "name": "Hidrocortisona 500 mg/5 ml con su inyectable", "unit": "ámpula", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 69, "category": "Medicamentos", "name": "Diclofenaco IV 75 mg/3 ml", "unit": "ámpulas", "min": 2, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 70, "category": "Medicamentos", "name": "Adrenalina (epinefrina) 1 mg/1 ml", "unit": "ámpulas", "min": 3, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 71, "category": "Medicamentos", "name": "Atropina 1 mg/1 ml", "unit": "ámpulas", "min": 2, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 72, "category": "Medicamentos", "name": "Diclofenaco 1.16 g/100 ml", "unit": "tubo", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 73, "category": "Medicamentos", "name": "Sulfadiazina de plata 1%", "unit": "tubo", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}];
+const key="inventarioBotiquinV1";
+let state={meta:{botiquin:"",fecha:"",responsable:""},items:items.map(x=>({...x}))};
+const $=id=>document.getElementById(id);
+function save(){try{localStorage.setItem(key,JSON.stringify(state))}catch(e){}}
+function load(){try{const x=JSON.parse(localStorage.getItem(key));if(x){state=x}}catch(e){}}
+function status(x){
+ if(x.qty==="")return ["FALTANTE","pending"];
+ let q=Number(x.qty);
+ if(!Number.isFinite(q)||q<0)return ["FALTANTE","pending"];
+ let faltan=x.min-q;
+ if(faltan<=0)return ["SUFICIENTE","ok"];
+ if(faltan<=2)return ["FALTANTE","min"];
+ return ["FALTANTE","bad"];
+}
+function render(){
+$("botiquin").value=state.meta.botiquin||"";$("fecha").value=state.meta.fecha||"";$("responsable").value=state.meta.responsable||"";
+const q=$("search").value.toLowerCase();const tb=$("tbody");tb.innerHTML="";
+state.items.forEach((x,i)=>{if(q && !(x.name+" "+x.category).toLowerCase().includes(q))return;
+let [s,c]=status(x);let tr=document.createElement("tr");tr.innerHTML=`<td>${x.id}</td><td>${x.category}</td><td>${x.name}</td><td>${x.unit}</td><td>${x.min}</td><td><input class="qty" type="number" min="0" step="1" value="${x.qty}"></td><td><span class="status ${c}">${s}</span></td><td>${x.expiryRequired?'<input class="expiry" type="date" value="'+(x.expiry||"")+'">':'—'}</td>`;
+tr.querySelector(".qty").addEventListener("input",e=>{x.qty=e.target.value===""?"":Math.max(0,parseInt(e.target.value,10)||0);save();renderStats();render()});
+let ex=tr.querySelector(".expiry");if(ex)ex.addEventListener("change",e=>{x.expiry=e.target.value;save()});
+tb.appendChild(tr)});
+renderStats()
+}
+function renderStats(){
+ let total=state.items.length, complete=state.items.filter(x=>x.qty!==""&&Number(x.qty)>=x.min).length;
+ let p=Math.round(complete/total*100);
+ $("pct").textContent=p+"%";
+ $("circle").style.background=`conic-gradient(var(--green) ${p*3.6}deg,#e8edf3 ${p*3.6}deg)`;
+
+ const now=new Date(); now.setHours(0,0,0,0);
+ const alerts=[];
+ state.items.forEach(x=>{
+   if(!x.expiryRequired || !x.expiry)return;
+   const d=new Date(x.expiry+"T00:00:00"); const days=Math.ceil((d-now)/86400000);
+   if(days<0) alerts.push(`<div class="alert danger">⚠️ Caducado: ${x.name} — ${x.expiry}</div>`);
+   else if(days<=30) alerts.push(`<div class="alert warn">⚠️ Caduca en ${days} día${days===1?"":"s"}: ${x.name} — ${x.expiry}</div>`);
+ });
+ $("expiryAlerts").innerHTML=alerts.length?alerts.join(""):'<div class="alert info">✓ Sin alertas de caducidad en los próximos 30 días.</div>';
+}
+["botiquin","fecha","responsable"].forEach(id=>$(id).addEventListener("input",e=>{state.meta[id]=e.target.value;save()}));
+$("search").addEventListener("input",render);$("clear").addEventListener("click",()=>{if(confirm("¿Limpiar todas las existencias y caducidades?")){state.items.forEach(x=>{x.qty="";x.expiry=""});save();render()}});
+$("print").addEventListener("click",()=>window.print());
+load();render();
+</script>
+</body></html>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const c = window.INVENTARIO_CONFIG || {};
+  if (!c.SHARED_MODE) {
+    const n = document.getElementById("sharedModeNotice");
+    if (n) n.style.display = "block";
+  }
+});
+</script>
