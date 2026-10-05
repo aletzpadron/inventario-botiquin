@@ -1,0 +1,14 @@
+PROYECTO FINAL — PUBLICACIÓN
+
+1. Sube index.html a un repositorio público de GitHub.
+2. Activa GitHub Pages desde Settings > Pages > Deploy from a branch > main > /root.
+3. La URL será similar a:
+   https://TU-USUARIO.github.io/inventario-botiquin/
+
+PARA USO MULTIUSUARIO:
+4. Crea un proyecto en Supabase.
+5. Ejecuta supabase_schema.sql en SQL Editor.
+6. Configura autenticación y conecta el frontend a Supabase.
+7. Nunca coloques una service_role key en index.html.
+
+El archivo actual funciona como plantilla limpia y no contiene datos de operación.
