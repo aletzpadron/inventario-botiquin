@@ -23,3 +23,4 @@ El proyecto se entrega SIN datos de operación:
 - sin caducidades capturadas
 
 Se conservan únicamente los artículos, categorías y cantidades mínimas necesarias para que el formato funcione.
+prueba de despliegue
