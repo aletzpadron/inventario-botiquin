@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1769aa">
+<title>Inventario de Botiquín</title>
+<style>
+:root{--bg:#eef4f8;--card:#fff;--text:#172033;--muted:#667085;--line:#d8e2ec;--accent:#1769aa;--accent2:#5b4bc4;--green:#159957;--red:#d64545;--yellow:#d99a00;--teal:#0f8b8d;--purple:#7657c5;--shadow:0 8px 26px rgba(20,35,55,.10)}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input{font:inherit}
+.wrap{max-width:1200px;margin:auto;padding:14px}
+.head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+h1{margin:0;font-size:25px}.sub{color:var(--muted);font-size:14px;margin-top:3px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px;box-shadow:var(--shadow)}
+.card{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.card:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(20,35,55,.12)}
+.head{background:linear-gradient(135deg,#1769aa,#5b4bc4);color:#fff;padding:15px 16px;border-radius:18px;box-shadow:0 8px 24px rgba(23,105,170,.20)}
+.head .sub{color:rgba(255,255,255,.86)}
+.head .btn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.30)}
+.category{border-left:5px solid var(--accent);transition:border-color .2s ease,box-shadow .2s ease}
+.category:nth-child(3n+2){border-left-color:var(--teal)}
+.category:nth-child(3n){border-left-color:var(--purple)}
+.category-head{background:linear-gradient(90deg,#edf5ff,#f7f3ff)}
+.category:nth-child(3n+2) .category-head{background:linear-gradient(90deg,#ecfbfa,#f4faff)}
+.category:nth-child(3n) .category-head{background:linear-gradient(90deg,#f4efff,#fbf8ff)}
+.item:nth-child(even){background:#fbfdff}
+.badge.ok{box-shadow:0 2px 8px rgba(21,153,87,.12)}
+.badge.bad{box-shadow:0 2px 8px rgba(214,69,69,.12)}
+.qty-btn.plus{background:#e8f6ee;color:#14763f}
+.qty-btn.minus{background:#fff0f0;color:#a32626}
+.qty-input:focus,.expiry:focus,.field input:focus,.search:focus,textarea:focus{outline:3px solid rgba(23,105,170,.13);border-color:var(--accent)}
+.tools{background:linear-gradient(90deg,#fff,#f7f9ff)}
+
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.field label{display:block;font-weight:700;font-size:12px;margin-bottom:5px}
+.field input,.search{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.stats{display:grid;grid-template-columns:180px 1fr;gap:18px;align-items:center}
+.circle-wrap{display:flex;justify-content:center}.circle{width:155px;height:155px;border-radius:50%;background:conic-gradient(var(--green) 0deg,#e8edf3 0deg);display:grid;place-items:center;position:relative}
+.circle:before{content:"";position:absolute;width:120px;height:120px;background:#fff;border-radius:50%}.circle>div{position:relative;text-align:center}.pct{font-size:36px;font-weight:850}.circle-label{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.08em}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:13px}.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}.g{background:var(--green)}.r{background:var(--red)}
+.alerts{margin-top:10px}.alert{padding:10px 12px;border-radius:10px;margin-top:7px;font-size:13px;font-weight:700}.alert.warn{background:#fff3cd;color:#805b00}.alert.danger{background:#ffe0e0;color:#a32626}.alert.info{background:#e8eef5;color:#536273}
+.tools{display:grid;grid-template-columns:1fr auto;gap:9px;margin-bottom:12px;position:sticky;top:0;background:var(--card);padding-bottom:4px;z-index:3}
+.btn{border:0;border-radius:11px;padding:12px 15px;background:var(--accent);color:#fff;font-weight:800;cursor:pointer}.btn.secondary{background:#667085}
+.category{border:1px solid var(--line);border-radius:15px;margin:10px 0;overflow:hidden;background:#fff}
+.category-head{width:100%;border:0;background:#eef3f8;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;text-align:left;font-weight:850;color:var(--text);cursor:pointer}
+.category-head small{color:var(--muted);font-weight:700}.chev{transition:.2s}.category.closed .chev{transform:rotate(-90deg)}
+.category-body{padding:0}.category.closed .category-body{display:none}
+.item{padding:14px;border-top:1px solid var(--line)}
+.item-top{display:flex;gap:10px;justify-content:space-between;align-items:flex-start}.item-name{font-weight:800;line-height:1.3}.item-no{color:var(--muted);font-size:12px;min-width:30px}
+.badge{font-size:11px;font-weight:900;border-radius:999px;padding:6px 9px;white-space:nowrap}.ok{background:#dff4e7;color:#146b39}.bad{background:#ffe0e0;color:#a32626}
+.item-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin:7px 0}
+.controls{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}.qty-btn{width:44px;height:44px;border:0;border-radius:12px;background:#eef3f8;color:var(--text);font-size:24px;font-weight:800;cursor:pointer}.qty-input{width:100%;height:44px;text-align:center;border:1px solid var(--line);border-radius:12px;font-size:18px;font-weight:800}.expiry-row{margin-top:9px}.expiry-row label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px}.expiry{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px}
+.empty{padding:25px;text-align:center;color:var(--muted)}
+@media(min-width:800px){.wrap{padding:22px}.card{padding:20px}.item{padding:14px}.category-body{display:grid;grid-template-columns:1fr 1fr}.category-body .item{border-right:1px solid var(--line)}}
+@media(max-width:700px){.wrap{padding:10px}.head{align-items:flex-start}.head .btn{padding:10px 11px}.meta{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.circle{width:140px;height:140px}.circle:before{width:108px;height:108px}.tools{grid-template-columns:1fr}.tools .btn{width:100%}.legend{font-size:12px}.card{border-radius:15px}}
+@media print{body{background:#fff}.card{box-shadow:none}.tools,.btn,.qty-btn{display:none!important}.category.closed .category-body{display:block}.category-body{display:block}.item{break-inside:avoid}.search{display:none}}
+
+/* Estilo más dinámico y colorido */
+body{background:linear-gradient(145deg,#edf7ff 0%,#f7f4ff 48%,#f0fbf5 100%)}
+.head h1{color:#fff}
+.card{border-color:#d9e5f4;box-shadow:0 8px 24px rgba(31,72,120,.09)}
+.card.meta{background:linear-gradient(135deg,#ffffff,#f1f8ff)}
+.card .tools{background:linear-gradient(90deg,#fff,#f4f8ff)}
+.btn{background:linear-gradient(135deg,#1769aa,#287de0);box-shadow:0 4px 10px rgba(23,105,170,.18)}
+.btn.secondary{background:linear-gradient(135deg,#65758b,#8794a8)}
+.category{border-color:#d8e4f1;box-shadow:0 3px 12px rgba(35,66,110,.045)}
+.category-head{background:linear-gradient(90deg,#e7f3ff,#f0ebff);border-left:5px solid #4588df}
+.category:nth-child(4n+2) .category-head{background:linear-gradient(90deg,#e6fbf3,#f1fff9);border-left-color:#21a67a}
+.category:nth-child(4n+3) .category-head{background:linear-gradient(90deg,#fff1e6,#fff8f1);border-left-color:#ed8b42}
+.category:nth-child(4n+4) .category-head{background:linear-gradient(90deg,#fff0f5,#fff8fb);border-left-color:#d95791}
+.item{transition:background .18s ease}
+.item:focus-within{background:#f4f9ff}
+.qty-btn{background:linear-gradient(145deg,#e5f1ff,#f2eaff);color:#235b9c;box-shadow:inset 0 0 0 1px #d7e5fa}
+.qty-btn:active,.btn:active{transform:scale(.98)}
+.qty-input:focus,.field input:focus,.search:focus,.expiry:focus,#observaciones:focus{outline:3px solid #c8e1ff;border-color:#438de0}
+.badge.ok{background:#d9f8e6;color:#087443;border:1px solid #a7e9c2}
+.badge.bad{background:#ffe3e6;color:#b42332;border:1px solid #ffc2c9}
+#observacionesCard{border-top:4px solid #7b42c6;background:linear-gradient(135deg,#fff,#faf6ff)}
+#observaciones{font:inherit}
+
+
+/* Colores visibles por categoría */
+.category-head{color:#17324d;font-weight:900}
+.category[data-cat="Equipo médico"] .category-head{background:#dceeff;border-left:6px solid #1976d2}
+.category[data-cat="Glucometría"] .category-head{background:#e4f8ef;border-left:6px solid #159957}
+.category[data-cat="RPBI"] .category-head{background:#ffe6e6;border-left:6px solid #d64545}
+.category[data-cat="Soluciones"] .category-head{background:#fff0d9;border-left:6px solid #e38b16}
+.category[data-cat="Curación"] .category-head{background:#e9e4ff;border-left:6px solid #7657c5}
+.category[data-cat="Higiene"] .category-head{background:#dff7f6;border-left:6px solid #0f8b8d}
+.category[data-cat="Protección"] .category-head{background:#e6f0ff;border-left:6px solid #4b75c9}
+.category[data-cat="Instrumental"] .category-head{background:#f2e5d7;border-left:6px solid #a5672b}
+.category[data-cat="Medicamentos"] .category-head{background:#ffe3ed;border-left:6px solid #d95791}
+.category[data-cat="Vía aérea"] .category-head{background:#e4f1ff;border-left:6px solid #3c83d5}
+.category[data-cat="Lavado ocular"] .category-head{background:#dff8ff;border-left:6px solid #1597b4}
+.category[data-cat="Venoclisis"] .category-head{background:#e7f5ff;border-left:6px solid #2e7fc3}
+.category[data-cat="Jeringas"] .category-head{background:#fff4d8;border-left:6px solid #d69b18}
+.category[data-cat="Catéteres"] .category-head{background:#eee7ff;border-left:6px solid #7657c5}
+#observacionesCard{background:linear-gradient(135deg,#fff,#f5efff);border-top:5px solid #7657c5}
+
+
+/* v5: ubicación y foto de evidencia */
+.evidence-card{border-top:5px solid #0f8b8d;background:linear-gradient(135deg,#fff,#effcfb)}
+.evidence-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:14px;align-items:start}
+.photo-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.photo-preview{margin-top:10px;border:1px dashed #b8c9d8;border-radius:14px;padding:8px;background:#f8fbfd;min-height:80px;display:flex;justify-content:center;align-items:center}
+.photo-preview img{display:block;max-width:100%;max-height:280px;border-radius:10px;object-fit:contain}
+.photo-empty{color:#667085;font-size:13px;text-align:center;padding:20px 10px}
+.file-input{width:100%;padding:10px;border:1px dashed #b8c9d8;border-radius:11px;background:#fff}
+.photo-note{font-size:12px;color:#667085;margin-top:6px;line-height:1.4}
+@media(max-width:700px){.evidence-grid{grid-template-columns:1fr}}
+@media print{
+  .photo-actions,.file-input{display:none!important}
+  .photo-preview{border:0;padding:0}
+  .photo-preview img{max-height:260px}
+}
+
+
+/* Gestión de insumos */
+.manage-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.btn.add-item{background:#198754;color:#fff}
+.btn.remove-item{background:#dc3545;color:#fff}
+.add-form{display:none;background:#f8f9fa;border:1px solid #dee2e6;border-radius:10px;padding:14px;margin:10px 0 14px}
+.add-form.open{display:block}
+.add-grid{display:grid;grid-template-columns:2fr 1.3fr 1fr .8fr;gap:10px}
+.add-form label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:.9rem}
+.add-form input{padding:9px;border:1px solid #ced4da;border-radius:7px}
+.add-form .form-actions{display:flex;gap:8px;margin-top:12px}
+.custom-item-actions{margin-top:7px}
+.custom-item-actions button{font-size:.8rem;padding:5px 8px;border:0;border-radius:6px;background:#dc3545;color:#fff;cursor:pointer}
+@media(max-width:700px){.add-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:430px){.add-grid{grid-template-columns:1fr}}
+@media print{.manage-actions,.add-form,.custom-item-actions{display:none!important}}
+</style>
+<script>
+window.INVENTARIO_CONFIG={SUPABASE_URL:"",SUPABASE_PUBLISHABLE_KEY:"",SHARED_MODE:false};
+try{if(!localStorage.getItem("inventarioBotiquinCleanInitializedV2")){localStorage.removeItem("inventarioBotiquinV1");localStorage.removeItem("inventarioBotiquinDemoV1");localStorage.setItem("inventarioBotiquinCleanInitializedV2","1")}}catch(e){}
+</script>
+</head>
+<body>
+<div id="sharedModeNotice" style="display:none;margin:10px auto;max-width:1200px;padding:10px 14px;border-radius:12px;background:#fff7e6;border:1px solid #f0c36d;color:#7a5300;font:600 13px system-ui">Modo local: los cambios se guardan en este dispositivo.</div>
+<div class="wrap">
+  <div class="head">
+    <div><h1>🩺 Inventario de Botiquín</h1><div class="sub">Control rápido de existencias, caducidades y observaciones · v5 ubicación + evidencia</div></div>
+    <button class="btn" id="print">🖨️ Imprimir</button>
+  </div>
+
+  <div class="card meta">
+    <div class="field"><label>Número de botiquín</label><input id="botiquin" placeholder="Ej. B-01"></div>
+    <div class="field"><label>Fecha</label><input id="fecha" type="date"></div>
+    <div class="field"><label>Responsable</label><input id="responsable" placeholder="Nombre del responsable"></div>
+  </div>
+
+  <div class="card" style="border-top:5px solid var(--accent2)">
+    <div class="stats">
+      <div class="circle-wrap"><div class="circle" id="circle"><div><div class="pct" id="pct">0%</div><div class="circle-label">EN EXISTENCIA</div></div></div></div>
+      <div>
+        <div class="legend"><span><i class="dot g"></i>Verde: EN EXISTENCIA</span><span><i class="dot r"></i>Rojo: FALTANTE</span></div>
+        <div id="expiryAlerts" class="alerts" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tools">
+      <input class="search" id="search" placeholder="🔎 Buscar insumo, medicamento o categoría...">
+      <button class="btn secondary" id="clear">Limpiar existencias</button>
+    </div>
+    
+<div class="manage-actions">
+  <button class="btn add-item" id="showAdd">➕ Agregar insumo</button>
+  <button class="btn remove-item" id="removeCustom">🗑️ Quitar insumos</button>
+</div>
+
+<div class="add-form" id="addForm">
+  <div class="add-grid">
+    <label>Nombre del insumo
+      <input id="newName" type="text" placeholder="Ej. Gasas estériles">
+    </label>
+    <label>Categoría
+      <input id="newCategory" type="text" list="categoryList" placeholder="Ej. Curación">
+      <datalist id="categoryList"></datalist>
+    </label>
+    <label>Unidad
+      <input id="newUnit" type="text" value="pieza" placeholder="pieza, caja, frasco...">
+    </label>
+    <label>Mínimo
+      <input id="newMin" type="number" min="0" step="1" value="0">
+    </label>
+  </div>
+  <div class="form-actions">
+    <button class="btn add-item" id="saveNew">Guardar insumo</button>
+    <button class="btn" id="cancelAdd">Cancelar</button>
+  </div>
+</div>
+
+<div id="categories"></div>
+  </div>
+
+  <div class="card evidence-card" id="evidenceCard">
+    <div class="evidence-grid">
+      <div class="field">
+        <div class="photo-note">Indica el lugar físico donde está instalado o resguardado el botiquín.</div>
+      </div>
+      <div class="field">
+        <label for="evidencia">📷 Foto de evidencia</label>
+        <input class="file-input" id="evidencia" type="file" accept="image/*" capture="environment">
+        <div class="photo-actions">
+          <button class="btn secondary" id="removePhoto" type="button">🗑️ Quitar foto</button>
+        </div>
+        <div class="photo-preview" id="photoPreview">
+          <div class="photo-empty">No hay foto de evidencia cargada.</div>
+        </div>
+        <div class="photo-note">La foto se guarda en este dispositivo junto con el inventario. Se reduce automáticamente para ocupar menos espacio.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="observacionesCard">
+    <div class="field">
+      <label for="observaciones">📝 Observaciones</label>
+      <textarea id="observaciones" rows="6"
+        placeholder="Escribe aquí observaciones, incidencias, faltantes especiales, próximos vencimientos, etc."
+        style="width:100%;resize:vertical;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;line-height:1.45;min-height:130px;"></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+const items=[{"id": 1, "category": "Equipo médico", "name": "Reanimador tipo bolsa-válvula con vías de entrada de oxígeno, dispositivo de concentración y válvulas de liberación con bolsa de 1000 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 2, "category": "Equipo médico", "name": "Mascarilla adulto tamaño 4 o 5", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 3, "category": "Equipo médico", "name": "Estetoscopio adulto con baumanómetro", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 4, "category": "Equipo médico", "name": "Oxímetro de pulso", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 5, "category": "Equipo médico", "name": "Termómetro", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 6, "category": "Equipo médico", "name": "Glucómetro", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 7, "category": "Glucometría", "name": "Tiras reactivas para glucómetro", "unit": "piezas", "min": 15, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 8, "category": "Glucometría", "name": "Lancetas", "unit": "piezas", "min": 15, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 9, "category": "Glucometría", "name": "Pila de repuesto para glucómetro", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 10, "category": "RPBI", "name": "Depósito rígido de RPBI", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 11, "category": "Soluciones", "name": "Sol. NaCl 0.9% 500 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 12, "category": "Soluciones", "name": "Sol. NaCl 0.9% 250 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 13, "category": "Soluciones", "name": "Sol. Hartmann 250 o 500 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""},
+    {"id": 75, "category": "Soluciones", "name": "Sol. Hartmann 500 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""},  {"id": 14, "category": "Soluciones", "name": "Sol. Dextrosa 5% o 10% 250 o 500 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 15, "category": "Soluciones", "name": "Sol. Dextrosa 50% 50 ml", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 16, "category": "Curación", "name": "Torundas con jabón quirúrgico", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 17, "category": "Curación", "name": "Torundas con alcohol", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 18, "category": "Curación", "name": "Gasas no estériles", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 19, "category": "Curación", "name": "Apósitos estériles", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 20, "category": "Higiene", "name": "Desinfectante para manos", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 21, "category": "Protección", "name": "Cubrebocas", "unit": "piezas", "min": 10, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 22, "category": "Protección", "name": "Abatelenguas", "unit": "piezas", "min": 10, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 23, "category": "Protección", "name": "Guantes no estériles", "unit": "piezas", "min": 10, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 24, "category": "Curación", "name": "Apósitos transparentes", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 25, "category": "Instrumental", "name": "Tijeras de uso rudo", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 26, "category": "Protección", "name": "Sábana térmica", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 27, "category": "Medicamentos", "name": "Salbutamol 100 mcg, 200 dosis, aerosol", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 28, "category": "Vía aérea", "name": "Cánulas orofaríngeas Berman o Guedel 0, 1, 2, 3, 4, 5, 6", "unit": "paquete", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 29, "category": "Lavado ocular", "name": "Lavaojos", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 30, "category": "Curación", "name": "Ligadura", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 31, "category": "Curación", "name": "Venda elástica de 30 cm", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 32, "category": "Curación", "name": "Venda elástica de 15 o 20 cm", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 33, "category": "Curación", "name": "Venda elástica de 5 cm", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 34, "category": "Curación", "name": "Venda elástica de 10 cm", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 35, "category": "Curación", "name": "Esparadrapo (transport y/o tela adhesiva)", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 36, "category": "Curación", "name": "Porta cintas", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 37, "category": "Venoclisis", "name": "Equipo desechable para venoclisis normogotero", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 38, "category": "Jeringas", "name": "Jeringas de insulina", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 39, "category": "Jeringas", "name": "Jeringas 3 ml", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 40, "category": "Jeringas", "name": "Jeringas 5 ml", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 41, "category": "Jeringas", "name": "Jeringas 10 ml", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 42, "category": "Jeringas", "name": "Jeringas 20 ml", "unit": "piezas", "min": 2, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 43, "category": "Jeringas", "name": "Agujas tamaños varios", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 44, "category": "Catéteres", "name": "Catéter periférico corto #14", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 45, "category": "Catéteres", "name": "Catéter periférico corto #16", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 46, "category": "Catéteres", "name": "Catéter periférico corto #20", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 47, "category": "Catéteres", "name": "Catéter periférico corto #22", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 48, "category": "Catéteres", "name": "Catéter periférico corto #24", "unit": "piezas", "min": 3, "qty": "", "expiryRequired": false, "expiry": ""}, {"id": 49, "category": "Medicamentos", "name": "Ibuprofeno 600 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 50, "category": "Medicamentos", "name": "Paracetamol 500 mg", "unit": "tabletas", "min": 10, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 51, "category": "Medicamentos", "name": "Ketorolaco 10 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 52, "category": "Medicamentos", "name": "Ácido acetilsalicílico 500 mg", "unit": "tabletas", "min": 10, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 53, "category": "Medicamentos", "name": "Losartán 50 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 54, "category": "Medicamentos", "name": "Captopril 25 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 55, "category": "Medicamentos", "name": "Loratadina 10 mg", "unit": "tabletas", "min": 10, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 56, "category": "Medicamentos", "name": "Cloropiramina 25 mg", "unit": "tabletas", "min": 4, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 57, "category": "Medicamentos", "name": "Butilhioscina con metamizol sódico 10 mg/250 mg", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 58, "category": "Medicamentos", "name": "Omeprazol 20 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 59, "category": "Medicamentos", "name": "Neomicina / caolín / pectina 129 mg/280 mg/30 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 60, "category": "Medicamentos", "name": "Loperamida 2 mg", "unit": "tabletas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 61, "category": "Medicamentos", "name": "Salbutamol 100 mg", "unit": "pieza", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 62, "category": "Medicamentos", "name": "Naproxeno 500 mg", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 63, "category": "Medicamentos", "name": "Dimenhidrinato 50 mg", "unit": "piezas", "min": 5, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 64, "category": "Medicamentos", "name": "Ketorolaco 30 mg/1 ml", "unit": "ámpulas", "min": 3, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 65, "category": "Medicamentos", "name": "Tramadol 100 mg/2 ml", "unit": "ámpulas", "min": 3, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 66, "category": "Medicamentos", "name": "Metamizol sódico 1 g/2 ml", "unit": "ámpulas", "min": 2, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 67, "category": "Medicamentos", "name": "Hioscina IV 20 mg", "unit": "ámpulas", "min": 3, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 68, "category": "Medicamentos", "name": "Dexametasona 8 mg/2 ml", "unit": "ámpulas", "min": 2, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 69, "category": "Medicamentos", "name": "Hidrocortisona 500 mg/5 ml con su inyectable", "unit": "ámpula", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 70, "category": "Medicamentos", "name": "Diclofenaco IV 75 mg/3 ml", "unit": "ámpulas", "min": 2, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 71, "category": "Medicamentos", "name": "Adrenalina (epinefrina) 1 mg/1 ml", "unit": "ámpulas", "min": 3, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 72, "category": "Medicamentos", "name": "Atropina 1 mg/1 ml", "unit": "ámpulas", "min": 2, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 73, "category": "Medicamentos", "name": "Diclofenaco 1.16 g/100 ml", "unit": "tubo", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}, {"id": 74, "category": "Medicamentos", "name": "Sulfadiazina de plata 1%", "unit": "tubo", "min": 1, "qty": "", "expiryRequired": true, "expiry": ""}];
+const key="inventarioBotiquinV1";
+let state={meta:{botiquin:"",fecha:"",responsable:"",observaciones:"",evidenciaFoto:""},items:items.map(x=>({...x}))};
+const $=id=>document.getElementById(id);
+function save(){try{localStorage.setItem(key,JSON.stringify(state))}catch(e){}}
+function load(){try{const x=JSON.parse(localStorage.getItem(key));if(x&&Array.isArray(x.items)){state=x;state.meta=state.meta||{};state.meta.botiquin=state.meta.botiquin||"";state.meta.fecha=state.meta.fecha||"";state.meta.responsable=state.meta.responsable||"";state.meta.observaciones=state.meta.observaciones||"";state.meta.evidenciaFoto=state.meta.evidenciaFoto||""}}catch(e){}}
+function status(x){const q=Number(x.qty);return x.qty!==""&&Number.isFinite(q)&&q>=x.min?["EN EXISTENCIA","ok"]:["FALTANTE","bad"]}
+function expiryHTML(x){
+ if(!x.expiryRequired)return "";
+ return '<div class="expiry-row"><label>Caducidad</label><input class="expiry" type="date" value="'+(x.expiry||"")+'"></div>';
+}
+function render(){
+ $("botiquin").value=state.meta.botiquin||"";$("fecha").value=state.meta.fecha||"";$("responsable").value=state.meta.responsable||"";$("observaciones").value=state.meta.observaciones||"";renderPhoto();
+ const q=$("search").value.trim().toLowerCase(), box=$("categories");box.innerHTML="";
+ const groups={};
+ state.items.forEach((x,i)=>{if(q&&!(x.name+" "+x.category).toLowerCase().includes(q))return;(groups[x.category]??=[]).push({x,i})});
+ const cats=Object.keys(groups);
+ if(!cats.length){box.innerHTML='<div class="empty">No se encontraron insumos.</div>';renderStats();return}
+ cats.forEach(cat=>{
+   const section=document.createElement("section");section.className="category";section.setAttribute("data-cat",cat);
+   const list=groups[cat], complete=list.filter(o=>status(o.x)[1]==="ok").length;
+   section.innerHTML='<button class="category-head" type="button"><span>📦 '+cat+' <small>('+list.length+')</small></span><span class="chev">▼</span></button><div class="category-body"></div>';
+   const body=section.querySelector(".category-body");
+   list.forEach(({x,i})=>{
+     const [s,c]=status(x);
+     const el=document.createElement("div");el.className="item";
+     el.innerHTML='<div class="item-top"><div><div class="item-no">#'+x.id+'</div><div class="item-name">'+escapeHTML(x.name)+'</div></div><span class="badge '+c+'">'+s+'</span></div>'+
+       '<div class="item-meta"><span>Unidad: '+escapeHTML(x.unit)+'</span><span>• Mínimo: '+x.min+'</span></div>'+
+       '<div class="controls"><button class="qty-btn minus" aria-label="Disminuir">−</button><input class="qty-input" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="'+(x.qty??"")+'"><button class="qty-btn plus" aria-label="Aumentar">+</button></div>'+
+       expiryHTML(x);
+     const input=el.querySelector(".qty-input");
+     const update=val=>{x.qty=val===""?"":Math.max(0,parseInt(val,10)||0);save();render()};
+     el.querySelector(".minus").onclick=()=>update(Math.max(0,(Number(x.qty)||0)-1));
+     el.querySelector(".plus").onclick=()=>update((Number(x.qty)||0)+1);
+     input.oninput=e=>{x.qty=e.target.value===""?"":Math.max(0,parseInt(e.target.value,10)||0);save();renderStats();const badge=el.querySelector(".badge");const [ns,nc]=status(x);badge.textContent=ns;badge.className="badge "+nc};
+     const ex=el.querySelector(".expiry");if(ex)ex.onchange=e=>{x.expiry=e.target.value;save();renderStats()};
+     body.appendChild(el);
+   });
+   section.querySelector(".category-head").onclick=()=>section.classList.toggle("closed");
+   box.appendChild(section);
+ });
+ renderStats();
+}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+function renderPhoto(){
+ const box=$("photoPreview"), src=state.meta.evidenciaFoto||"";
+ if(!src){box.innerHTML='<div class="photo-empty">No hay foto de evidencia cargada.</div>';return}
+ box.innerHTML='<img src="'+src+'" alt="Foto de evidencia del botiquín">';
+}
+function compressImage(file){
+ return new Promise((resolve,reject)=>{
+   const reader=new FileReader();
+   reader.onerror=()=>reject(reader.error||new Error("No se pudo leer la imagen."));
+   reader.onload=()=>{
+     const img=new Image();
+     img.onerror=()=>reject(new Error("La imagen no es válida."));
+     img.onload=()=>{
+       const max=1280;
+       let w=img.naturalWidth,h=img.naturalHeight;
+       if(w>max||h>max){const scale=Math.min(max/w,max/h);w=Math.round(w*scale);h=Math.round(h*scale)}
+       const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+       const ctx=canvas.getContext("2d");
+       ctx.drawImage(img,0,0,w,h);
+       resolve(canvas.toDataURL("image/jpeg",0.78));
+     };
+     img.src=reader.result;
+   };
+   reader.readAsDataURL(file);
+ });
+}
+function renderStats(){
+ const total=state.items.length, complete=state.items.filter(x=>x.qty!==""&&Number(x.qty)>=x.min).length;
+ const p=Math.round(complete/total*100);$("pct").textContent=p+"%";
+ $("circle").style.background=`conic-gradient(var(--green) ${p*3.6}deg,#e8edf3 ${p*3.6}deg)`;
+ const now=new Date();now.setHours(0,0,0,0);const alerts=[];
+ state.items.forEach(x=>{if(!x.expiryRequired||!x.expiry)return;const d=new Date(x.expiry+"T00:00:00"),days=Math.ceil((d-now)/86400000);if(days<0)alerts.push('<div class="alert danger">⚠️ Caducado: '+escapeHTML(x.name)+' — '+x.expiry+'</div>');else if(days<=30)alerts.push('<div class="alert warn">⚠️ Caduca en '+days+' día'+(days===1?"":"s")+': '+escapeHTML(x.name)+' — '+x.expiry+'</div>')});
+ $("expiryAlerts").innerHTML=alerts.length?alerts.join(""):'<div class="alert info">✓ Sin alertas de caducidad en los próximos 30 días.</div>';
+}
+["botiquin","fecha","responsable","observaciones"].forEach(id=>$(id).addEventListener("input",e=>{state.meta[id]=e.target.value;save()}));
+$("evidencia").addEventListener("change",async e=>{
+ const file=e.target.files&&e.target.files[0];
+ if(!file)return;
+ if(!file.type.startsWith("image/")){alert("Selecciona una imagen.");e.target.value="";return}
+ try{
+   state.meta.evidenciaFoto=await compressImage(file);
+   save();renderPhoto();
+ }catch(err){alert("No se pudo cargar la foto.");}
+});
+$("removePhoto").addEventListener("click",()=>{
+ if(!state.meta.evidenciaFoto)return;
+ if(confirm("¿Quitar la foto de evidencia?")){
+   state.meta.evidenciaFoto="";
+   $("evidencia").value="";
+   save();renderPhoto();
+ }
+});
+$("search").addEventListener("input",render);
+$("clear").addEventListener("click",()=>{if(confirm("¿Limpiar todas las existencias y caducidades?")){state.items.forEach(x=>{x.qty="";x.expiry=""});save();render()}});
+$("print").addEventListener("click",()=>window.print());
+load();render();
+const c=window.INVENTARIO_CONFIG||{};if(!c.SHARED_MODE){const n=$("sharedModeNotice");if(n)n.style.display="block";}
+</script>
+</body>
+</html>
